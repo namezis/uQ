@@ -95,6 +95,17 @@ namespace cycfi { namespace uq
       }
    };
 
+   template <typename T>
+   struct inverse_port : port_base<inverse_port<T>>
+   {
+	   bool state() const
+      {
+         return port.state();
+      }
+
+      T port;
+   };
+
    struct on_type : port_base<on_type>
    {
       constexpr bool state() const
@@ -126,11 +137,13 @@ namespace cycfi { namespace uq
    >
    struct output_port : port_base<output_port<port, pin, speed, mode, pull>>
    {
-      constexpr static uint32_t mask = 1 << pin;
       using self_type = output_port;
+      using inverse_type = inverse_port<output_port>;
+
+      constexpr static uint32_t mask = 1 << pin;
+      constexpr static GPIO_TypeDef* out = detail::gpio(port);
 
       output_port()
-       : out(detail::gpio(port))
       {
          detail::enable_gpio(port);
          GPIO_InitTypeDef init =
@@ -167,6 +180,12 @@ namespace cycfi { namespace uq
          return *this;
       }
 
+      output_port& operator=(inverse_type)
+      {
+         out->ODR ^= mask;
+         return *this;
+      }
+
       output_port& operator=(on_type)
       {
          out->BSRRL = mask;
@@ -178,8 +197,6 @@ namespace cycfi { namespace uq
          out->BSRRL = mask;
          return *this;
       }
-
-      GPIO_TypeDef* out = detail::gpio(port);
    };
 
    // Dev boards typically have a main led:
