@@ -29,6 +29,11 @@
 	</natures>
 	<linkedResources>
 		<link>
+			<name>include</name>
+			<type>2</type>
+			<locationURI>PARENT-2-PROJECT_LOC/include</locationURI>
+		</link>
+		<link>
 			<name>src</name>
 			<type>2</type>
 			<locationURI>virtual:/virtual</locationURI>
@@ -37,6 +42,11 @@
 			<name>src/main.cpp</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/src/main.cpp</locationURI>
+		</link>
+		<link>
+			<name>src/startup.cpp</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/src/startup.cpp</locationURI>
 		</link>
 	</linkedResources>
 </projectDescription>
