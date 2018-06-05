@@ -4,20 +4,10 @@
    Distributed under the Boost Software License, Version 1.0. (See accompanying
    file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 =============================================================================*/
-#include <uq.hpp>
+#if !defined(CYCFI_UQ_HPP_JUNE_5_2018)
+#define CYCFI_UQ_HPP_JUNE_5_2018
 
-namespace uq = cycfi::uq;
+#include <uq/startup.hpp>
+#include <uq/gpio.hpp>
 
-int main()
-{
-   uq::init();
-
-   uq::main_led led;
-   led = 1;
-
-   while (true)
-   {
-      HAL_Delay(1000);
-      led = !led;
-   }
-}
+#endif
