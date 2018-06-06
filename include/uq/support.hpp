@@ -88,33 +88,32 @@ namespace cycfi { namespace uq
    ////////////////////////////////////////////////////////////////////////////
    // debouncer
    ////////////////////////////////////////////////////////////////////////////
-   template <std::uint32_t delay = 50 /*ms*/>
+   template <std::size_t delay = 100 /*ms*/>
    struct debouncer
    {
       constexpr debouncer()
        : _time(millis())
-       , _state(0)
       {}
 
       inline bool operator()(bool state)
       {
-         if (!_state && state)
+         if (state)
          {
             auto now = millis();
             auto elapsed = now - _time;
             _time = now;
             if (elapsed > delay)
-               _state = 1;
+               return true;
          }
-         else if (_state)
-         {
-            _state = 0;
-         }
-         return _state;
+         return false;
       }
 
-      bool           _state;
-      std::uint32_t  _time;
+      inline bool operator()()
+      {
+         return (*this)(true);
+      }
+
+      std::uint32_t _time;
    };
 
    ////////////////////////////////////////////////////////////////////////////
@@ -171,5 +170,16 @@ namespace cycfi { namespace uq
       reverse(s);
    }
 }}
+
+///////////////////////////////////////////////////////////////////////////////
+// Interrupts (These should be placed in the global scope)
+///////////////////////////////////////////////////////////////////////////////
+struct irq_not_handled {};
+
+template <typename Key>
+inline irq_not_handled irq(Key)
+{
+	return {};
+}
 
 #endif

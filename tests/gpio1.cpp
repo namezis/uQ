@@ -9,7 +9,8 @@
 namespace uq = cycfi::uq;
 
 ///////////////////////////////////////////////////////////////////////////////
-// Toggle the LED once every second (using the dev-board's main LED)
+// Simplest toggle the led test. This test uses simple delay to toggle the
+// dev-board's main LED at a rate of 1 per second. No setup required.
 ///////////////////////////////////////////////////////////////////////////////
 
 int main()

@@ -37,21 +37,21 @@ namespace cycfi { namespace uq
 
    enum class port_mode_enum
    {
-      push_pull = GPIO_MODE_OUTPUT_PP   // Output Push Pull Mode
-    , open_drain = GPIO_MODE_OUTPUT_OD  // Output Open Drain Mode
+      push_pull = GPIO_MODE_OUTPUT_PP     // Output Push Pull Mode
+    , open_drain = GPIO_MODE_OUTPUT_OD    // Output Open Drain Mode
    };
 
    enum class port_pull_enum
    {
-      none = GPIO_NOPULL                // No Pull-up or Pull-down
-    , pull_up = GPIO_PULLUP             // Pull-up
-    , pull_down = GPIO_PULLDOWN         // Pull-down
+      none = GPIO_NOPULL                  // No Pull-up or Pull-down
+    , pull_up = GPIO_PULLUP               // Pull-up
+    , pull_down = GPIO_PULLDOWN           // Pull-down
    };
 
    enum class port_edge_enum
    {
-      rising                            // Rising edge
-    , falling                           // Falling edge
+      rising = GPIO_MODE_IT_RISING        // Rising edge
+    , falling = GPIO_MODE_IT_FALLING      // Falling edge
    };
 
    namespace port
@@ -162,6 +162,8 @@ namespace cycfi { namespace uq
    >
    struct output_port : port_base<output_port<port, pin, speed, mode, pull>>
    {
+      static_assert(pin < 16, "Invalid pin number.");
+
       using self_type = output_port;
       using inverse_type = inverse_port<output_port>;
 
@@ -238,6 +240,8 @@ namespace cycfi { namespace uq
    >
    struct input_port : port_base<input_port<port, pin, pull>>
    {
+      static_assert(pin < 16, "Invalid pin number.");
+
       using self_type = input_port;
       constexpr static uint32_t mask = 1 << pin;
       constexpr static auto in = detail::gpio(port);
@@ -255,6 +259,22 @@ namespace cycfi { namespace uq
          HAL_GPIO_Init(in, &init);
       }
 
+      input_port(port_edge_enum edge, std::size_t priority = 0)
+      {
+         detail::enable_gpio(port);
+         GPIO_InitTypeDef init =
+         {
+            std::uint32_t(mask)
+          , std::uint32_t(edge)
+          , std::uint32_t(pull)
+          , GPIO_SPEED_FREQ_VERY_HIGH
+         };
+         HAL_GPIO_Init(in, &init);
+
+         HAL_NVIC_SetPriority(detail::exti_irq<pin>(), priority, 0);
+         HAL_NVIC_EnableIRQ(detail::exti_irq<pin>());
+      }
+
       ~input_port()
       {
          HAL_GPIO_DeInit(in, pin);
@@ -270,5 +290,11 @@ namespace cycfi { namespace uq
    // Dev boards typically have a main button:
    using main_btn = input_port<port::portc, 13, port::pull_down>;
 }}
+
+////////////////////////////////////////////////////////////////////////////
+// Interrupt Key (This should be placed in the global scope)
+////////////////////////////////////////////////////////////////////////////
+template <std::size_t N>
+struct exti_task {};
 
 #endif

@@ -68,6 +68,31 @@ namespace cycfi { namespace uq { namespace detail
          case 10: __HAL_RCC_GPIOK_CLK_DISABLE(); break;
       }
    }
+
+   template <std::size_t const pin>
+   constexpr IRQn_Type exti_irq()
+   {
+      static_assert(pin < 16, "Invalid pin number.");
+      switch (pin)
+      {
+         case 0:  return EXTI0_IRQn;
+         case 1:  return EXTI1_IRQn;
+         case 2:  return EXTI2_IRQn;
+         case 3:  return EXTI3_IRQn;
+         case 4:  return EXTI4_IRQn;
+         case 5:  return EXTI9_5_IRQn;
+         case 6:  return EXTI9_5_IRQn;
+         case 7:  return EXTI9_5_IRQn;
+         case 8:  return EXTI9_5_IRQn;
+         case 9:  return EXTI9_5_IRQn;
+         case 10: return EXTI15_10_IRQn;
+         case 11: return EXTI15_10_IRQn;
+         case 12: return EXTI15_10_IRQn;
+         case 13: return EXTI15_10_IRQn;
+         case 14: return EXTI15_10_IRQn;
+         case 15: return EXTI15_10_IRQn;
+      }
+   }
 }}}
 
 #endif
