@@ -23,7 +23,7 @@ namespace cycfi { namespace uq
    enum class port_speed_enum
    {
       // 2MHz low speed
-      low_speed = GPIO_SPEED_FREQ_LOW
+      low_speed = GPIO_SPEED_FREQ_LOW,
 
       // 12.5 MHz to 50 MHz medium speed
       mid_speed  = GPIO_SPEED_FREQ_MEDIUM,
