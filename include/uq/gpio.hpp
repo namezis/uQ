@@ -38,6 +38,12 @@ namespace cycfi { namespace uq
     , pull_down = GPIO_PULLDOWN                       // Pull-down
    };
 
+   enum class port_edge_enum
+   {
+      rising                                          // Rising edge
+    , falling                                         // Falling edge
+   };
+
    namespace port
    {
       auto constexpr porta                = port_enum::a;
@@ -63,8 +69,12 @@ namespace cycfi { namespace uq
       auto constexpr no_pull              = port_pull_enum::none;
       auto constexpr pull_up              = port_pull_enum::pull_up;
       auto constexpr pull_down            = port_pull_enum::pull_down;
+
+      auto constexpr rising_edge          = port_edge_enum::rising;
+      auto constexpr falling_edge         = port_edge_enum::falling;
    }
 
+   ////////////////////////////////////////////////////////////////////////////
    template <typename Derived>
    struct port_base
    {
@@ -128,6 +138,9 @@ namespace cycfi { namespace uq
       constexpr off_type off = {};
    }
 
+   ////////////////////////////////////////////////////////////////////////////
+   // output_port
+   ////////////////////////////////////////////////////////////////////////////
    template <
       port_enum port
     , std::uint8_t pin
@@ -141,7 +154,7 @@ namespace cycfi { namespace uq
       using inverse_type = inverse_port<output_port>;
 
       constexpr static uint32_t mask = 1 << pin;
-      constexpr static GPIO_TypeDef* out = detail::gpio(port);
+      constexpr static auto out = detail::gpio(port);
 
       output_port()
       {
@@ -163,7 +176,7 @@ namespace cycfi { namespace uq
 
       bool state() const
       {
-         return (out->IDR & mask) != 0;
+         return (out->ODR & mask) != 0;
       }
 
       output_port& operator=(bool val)
@@ -199,8 +212,51 @@ namespace cycfi { namespace uq
       }
    };
 
+   ////////////////////////////////////////////////////////////////////////////
    // Dev boards typically have a main led:
    using main_led = output_port<port::portb, 0>;
+
+   ////////////////////////////////////////////////////////////////////////////
+   // input_port
+   ////////////////////////////////////////////////////////////////////////////
+   template <
+      port_enum port
+    , std::uint8_t pin
+    , port_pull_enum pull = port::no_pull
+   >
+   struct input_port : port_base<input_port<port, pin, pull>>
+   {
+      using self_type = input_port;
+      constexpr static uint32_t mask = 1 << pin;
+      constexpr static auto in = detail::gpio(port);
+
+      input_port()
+      {
+         detail::enable_gpio(port);
+         GPIO_InitTypeDef init =
+         {
+            std::uint32_t(mask)
+          , GPIO_MODE_INPUT
+          , std::uint32_t(pull)
+          , GPIO_SPEED_FREQ_VERY_HIGH
+         };
+         HAL_GPIO_Init(in, &init);
+      }
+
+      ~input_port()
+      {
+         HAL_GPIO_DeInit(in, pin);
+      }
+
+      bool state() const
+      {
+         return (in->IDR & mask) != 0;
+      }
+   };
+
+   ////////////////////////////////////////////////////////////////////////////
+   // Dev boards typically have a main button:
+   using main_btn = input_port<port::portc, 13, port::pull_down>;
 }}
 
 #endif

@@ -8,16 +8,21 @@
 
 namespace uq = cycfi::uq;
 
+///////////////////////////////////////////////////////////////////////////////
+// Toggle the main LED on button press (using the dev-board's main button)
+///////////////////////////////////////////////////////////////////////////////
+
 int main()
 {
    uq::init();
 
-   uq::main_led led;
-   led = 1;
+   uq::main_led      led;
+   uq::main_btn      btn;
+   uq::debouncer<>   debounce;
 
    while (true)
    {
-      HAL_Delay(1000);
-      led = !led;
+      if (debounce(btn))
+         led = !led;
    }
 }

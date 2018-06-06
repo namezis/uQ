@@ -8,6 +8,7 @@
 #define CYCFI_UQ_HPP_JUNE_5_2018
 
 #include <uq/startup.hpp>
+#include <uq/support.hpp>
 #include <uq/gpio.hpp>
 
 #endif

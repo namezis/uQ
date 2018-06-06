@@ -39,9 +39,9 @@
 			<locationURI>virtual:/virtual</locationURI>
 		</link>
 		<link>
-			<name>src/main.cpp</name>
-			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/src/main.cpp</locationURI>
+			<name>tests</name>
+			<type>2</type>
+			<locationURI>PARENT-2-PROJECT_LOC/tests</locationURI>
 		</link>
 		<link>
 			<name>src/startup.cpp</name>
