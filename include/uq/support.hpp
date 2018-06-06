@@ -93,22 +93,28 @@ namespace cycfi { namespace uq
    {
       constexpr debouncer()
        : _time(millis())
+       , _state(0)
       {}
 
       inline bool operator()(bool state)
       {
-         if (state)
+         if (!_state && state)
          {
             auto now = millis();
             auto elapsed = now - _time;
             _time = now;
             if (elapsed > delay)
-               return true;
+               _state = 1;
          }
-         return false;
+         else if (_state)
+         {
+            _state = 0;
+         }
+         return _state;
       }
 
-      std::uint32_t _time;
+      bool           _state;
+      std::uint32_t  _time;
    };
 
    ////////////////////////////////////////////////////////////////////////////
