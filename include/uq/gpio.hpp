@@ -10,6 +10,12 @@
 #include <cstdint>
 #include <uq/detail/gpio.hpp>
 
+////////////////////////////////////////////////////////////////////////////
+// Interrupt Key (This should be placed in the global scope)
+////////////////////////////////////////////////////////////////////////////
+template <std::size_t N>
+struct exti_task {};
+
 namespace cycfi { namespace uq
 {
    ////////////////////////////////////////////////////////////////////////////
@@ -243,6 +249,7 @@ namespace cycfi { namespace uq
       static_assert(pin < 16, "Invalid pin number.");
 
       using self_type = input_port;
+      using exti = exti_task<pin>;
       constexpr static uint32_t mask = 1 << pin;
       constexpr static auto in = detail::gpio(port);
 
@@ -290,11 +297,5 @@ namespace cycfi { namespace uq
    // Dev boards typically have a main button:
    using main_btn = input_port<port::portc, 13, port::pull_down>;
 }}
-
-////////////////////////////////////////////////////////////////////////////
-// Interrupt Key (This should be placed in the global scope)
-////////////////////////////////////////////////////////////////////////////
-template <std::size_t N>
-struct exti_task {};
 
 #endif

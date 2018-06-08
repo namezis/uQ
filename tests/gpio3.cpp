@@ -15,6 +15,11 @@ namespace uq = cycfi::uq;
 // button is pressed, it transitions from 0 to 1). An exti_task is setup to
 // handle this interrupt. The task simply toggles the main LED. No setup
 // required.
+//
+// For demonstration only. Typically, buttons are polled. Using interrupts
+// with non hardware-debounced buttons is not a good idea because buttons
+// bounce and can generate a lot of edges which invoke the interrupt function
+// many times.
 ///////////////////////////////////////////////////////////////////////////////
 
 uq::main_led      led;
@@ -27,7 +32,7 @@ int main()
    while (true) {}
 }
 
-void irq(exti_task<13>)
+void irq(uq::main_btn::exti)
 {
    if (debounce())
       led = !led;

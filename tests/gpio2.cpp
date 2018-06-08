@@ -11,8 +11,8 @@ namespace uq = cycfi::uq;
 ///////////////////////////////////////////////////////////////////////////////
 // Simplest button test. We poll the dev-board's main button, which is
 // configured with a pull-down to ground, hence normally 0. The dev-board's
-// main LED is turned ON if the button is pushed, otherwise the main led is
-// turned OFF. No setup required.
+// main LED is toggled on each button press. The button is debounced in
+// software. No setup required.
 ///////////////////////////////////////////////////////////////////////////////
 
 int main()
@@ -21,10 +21,12 @@ int main()
 
    uq::main_led      led;
    uq::main_btn      btn;
+   uq::debouncer<>   debounce;
 
    while (true)
    {
       uq::delay_ms(30);
-      led = btn;
+      if (debounce(btn))
+         led = !led;
    }
 }
