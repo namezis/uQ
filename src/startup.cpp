@@ -10,16 +10,18 @@
 
 namespace cycfi { namespace uq
 {
+	// This function is executed in case of error occurrence.
+	void error_handler()
+	{
+	   BSP_LED_On(LED3); // $$$ FIXME $$$
+	   while (1)
+	   {
+	   }
+	}
+
    namespace
    {
-      // This function is executed in case of error occurrence.
-      void error_handler()
-      {
-         BSP_LED_On(LED3);
-         while (1)
-         {
-         }
-      }
+
 
       // System Clock Configuration
       //    The system Clock is configured as follows:
@@ -120,6 +122,11 @@ namespace cycfi { namespace uq
 
    void init()
    {
+      static bool initialized = false;
+      if (initialized)
+         return;
+      initialized = true;
+
       // Enable the CPU Cache
       CPU_CACHE_Enable();
 

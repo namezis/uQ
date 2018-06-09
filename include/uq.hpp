@@ -10,5 +10,6 @@
 #include <uq/startup.hpp>
 #include <uq/support.hpp>
 #include <uq/gpio.hpp>
+#include <uq/timer.hpp>
 
 #endif

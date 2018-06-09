@@ -52,6 +52,9 @@ namespace cycfi { namespace uq { namespace detail
 
 extern "C"
 {
+   ////////////////////////////////////////////////////////////////////////////
+   // External interrupts
+   ////////////////////////////////////////////////////////////////////////////
    void EXTI0_IRQHandler(void)
    {
       cycfi::uq::detail::handle_exti<0>();
@@ -96,6 +99,68 @@ extern "C"
       cycfi::uq::detail::handle_exti<14>();
       cycfi::uq::detail::handle_exti<15>();
    }
+
+   ////////////////////////////////////////////////////////////////////////////
+   // Timer interrupts
+   ////////////////////////////////////////////////////////////////////////////
+#define UQ_TIM_GET_FLAG(timer, flag)                                          \
+   (((timer)->SR & (flag)) == (flag))
+   /***/
+
+#define UQ_TIM_GET_IT_SOURCE(timer, interrupt)                                \
+   ((((timer)->DIER & (interrupt)) == (interrupt)) ? SET : RESET)
+   /***/
+
+#define UQ_TIM_CLEAR_IT(timer, interrupt)                                     \
+   ((timer)->SR = ~(uint32_t)(interrupt))
+   /***/
+
+#define TIMER_INTERRUPT_HANDLER(N)                                            \
+   void TIM##N##_IRQHandler(void)                                             \
+   {                                                                          \
+      if (UQ_TIM_GET_FLAG(TIM##N, TIM_IT_UPDATE) != RESET)                    \
+      {                                                                       \
+         if (UQ_TIM_GET_IT_SOURCE(TIM##N, TIM_IT_UPDATE) !=RESET)             \
+         {                                                                    \
+            UQ_TIM_CLEAR_IT(TIM##N, TIM_IT_UPDATE);                           \
+            irq(timer_task<N>{});                                             \
+         }                                                                    \
+      }                                                                       \
+   }                                                                          \
+   /***/
+
+#if defined(TIM2)
+ TIMER_INTERRUPT_HANDLER(2)
+#endif
+
+#if defined(TIM3)
+ TIMER_INTERRUPT_HANDLER(3)
+#endif
+
+#if defined(TIM4)
+ TIMER_INTERRUPT_HANDLER(4)
+#endif
+
+#if defined(TIM5)
+ TIMER_INTERRUPT_HANDLER(5)
+#endif
+
+#if defined(TIM7)
+ TIMER_INTERRUPT_HANDLER(7)
+#endif
+
+#if defined(TIM15)
+ TIMER_INTERRUPT_HANDLER(15)
+#endif
+
+#if defined(TIM16)
+ TIMER_INTERRUPT_HANDLER(16)
+#endif
+
+#if defined(TIM17)
+ TIMER_INTERRUPT_HANDLER(17)
+#endif
+
 }
 
 #endif

@@ -9,22 +9,25 @@
 namespace uq = cycfi::uq;
 
 ///////////////////////////////////////////////////////////////////////////////
-// Simplest button test. We poll the dev-board's main button, which is
-// configured with a pull-down to ground, hence normally 0. The dev-board's
-// main led is toggled on each button press. The button is debounced in
-// software. No setup required.
+// Toggle led test using timers and interrupts. This test uses a timer to
+// toggle the dev-board's main led at a rate of 1 per second. No setup
+// required.
 ///////////////////////////////////////////////////////////////////////////////
 
-int main()
-{
-   uq::main_led      led;
-   uq::main_btn      btn;
-   uq::debouncer<>   debounce;
+uq::main_led   led;
+uq::timer<3>   timer(10000, 10000); // 10kHz freq, 10000 period = 1 second
 
-   while (true)
-   {
-      uq::delay_ms(30);
-      if (debounce(btn))
-         led = !led;
-   }
+int main(void)
+{
+   timer.enable_interrupt();
+   timer.start();
+   while (true) {}
 }
+
+void irq(timer_task<3>)
+{
+  led = !led;
+}
+
+// The actual "C" interrupt handlers are defined here:
+#include <uq/irq.hpp>

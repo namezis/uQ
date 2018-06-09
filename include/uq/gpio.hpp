@@ -9,6 +9,7 @@
 
 #include <cstdint>
 #include <uq/detail/gpio.hpp>
+#include <uq/startup.hpp>
 
 ////////////////////////////////////////////////////////////////////////////
 // Interrupt Key (This should be placed in the global scope)
@@ -160,24 +161,31 @@ namespace cycfi { namespace uq
    // output_port
    ////////////////////////////////////////////////////////////////////////////
    template <
-      port_enum port
-    , std::uint8_t pin
-    , port_speed_enum speed = port::high_speed
-    , port_mode_enum mode = port::push_pull
-    , port_pull_enum pull = port::no_pull
+      port_enum port_
+    , std::uint8_t pin_
+    , port_speed_enum speed_ = port::high_speed
+    , port_mode_enum mode_ = port::push_pull
+    , port_pull_enum pull_ = port::no_pull
    >
-   struct output_port : port_base<output_port<port, pin, speed, mode, pull>>
+   struct output_port : port_base<output_port<port_, pin_, speed_, mode_, pull_>>
    {
-      static_assert(pin < 16, "Invalid pin number.");
+      static_assert(pin_ < 16, "Invalid pin number.");
 
       using self_type = output_port;
       using inverse_type = inverse_port<output_port>;
 
+      constexpr static port_enum port = port_;
+      constexpr static std::uint8_t pin = pin_;
+      constexpr static port_speed_enum speed = speed_;
+      constexpr static port_mode_enum mode = mode_;
+      constexpr static port_pull_enum pull = pull_;
       constexpr static uint32_t mask = 1 << pin;
       constexpr static auto out = detail::gpio(port);
 
       output_port()
       {
+         init();  // Initialize the system
+
          detail::enable_gpio(port);
          GPIO_InitTypeDef init =
          {
@@ -240,21 +248,26 @@ namespace cycfi { namespace uq
    // input_port
    ////////////////////////////////////////////////////////////////////////////
    template <
-      port_enum port
-    , std::uint8_t pin
-    , port_pull_enum pull = port::no_pull
+      port_enum port_
+    , std::uint8_t pin_
+    , port_pull_enum pull_ = port::no_pull
    >
-   struct input_port : port_base<input_port<port, pin, pull>>
+   struct input_port : port_base<input_port<port_, pin_, pull_>>
    {
-      static_assert(pin < 16, "Invalid pin number.");
+      static_assert(pin_ < 16, "Invalid pin number.");
 
       using self_type = input_port;
-      using exti = exti_task<pin>;
+
+      constexpr static port_enum port = port_;
+      constexpr static std::uint8_t pin = pin_;
+      constexpr static port_pull_enum pull = pull_;
       constexpr static uint32_t mask = 1 << pin;
       constexpr static auto in = detail::gpio(port);
 
       input_port()
       {
+         init();  // Initialize the system
+
          detail::enable_gpio(port);
          GPIO_InitTypeDef init =
          {
