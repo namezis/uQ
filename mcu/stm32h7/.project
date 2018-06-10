@@ -41,12 +41,37 @@
 		<link>
 			<name>tests</name>
 			<type>2</type>
-			<locationURI>PARENT-2-PROJECT_LOC/tests</locationURI>
+			<locationURI>virtual:/virtual</locationURI>
 		</link>
 		<link>
 			<name>src/startup.cpp</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/src/startup.cpp</locationURI>
+		</link>
+		<link>
+			<name>tests/gpio1.cpp</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/tests/gpio1.cpp</locationURI>
+		</link>
+		<link>
+			<name>tests/gpio2.cpp</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/tests/gpio2.cpp</locationURI>
+		</link>
+		<link>
+			<name>tests/gpio3.cpp</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/tests/gpio3.cpp</locationURI>
+		</link>
+		<link>
+			<name>tests/tests.cpp</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/tests/tests.cpp</locationURI>
+		</link>
+		<link>
+			<name>tests/timer1.cpp</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/tests/timer1.cpp</locationURI>
 		</link>
 	</linkedResources>
 </projectDescription>
