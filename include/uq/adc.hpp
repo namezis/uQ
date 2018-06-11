@@ -37,48 +37,45 @@ namespace cycfi { namespace uq
 
       adc()
       {
-         adc_base::construct();
+         constexpr auto adc = detail::get_adc(id_);
+         adc_base::construct(adc);
       }
 
-      virtual ~adc()
-      {
-         adc_base::destruct();
-      }
-
-      virtual void init() override
-      {
-         adc_base::setup();
-      }
-
-      // template <std::size_t channel, std::size_t pin, std::size_t rank>
+      // template <std::size_t channel>
       void enable_channel()
       {
-         ADC_ChannelConfTypeDef config;
-         config.Channel       = ADC_CHANNEL_3;           // Sampled channel number
-         config.Rank          = ADC_REGULAR_RANK_1;      // Rank of sampled channel number ADCx_CHANNEL
-         config.SamplingTime  = ADC_SAMPLETIME_1CYCLE_5; // Sampling time (number of clock cycles unit)
-         config.SingleDiff    = ADC_SINGLE_ENDED;        // Single-ended input channel
-         config.OffsetNumber  = ADC_OFFSET_NONE;         // No offset subtraction
-         config.Offset        = 0;                       // Parameter discarded because offset correction is disabled
+         // Enable GPIO clock
+         __HAL_RCC_GPIOA_CLK_ENABLE();
 
-         if (HAL_ADC_ConfigChannel(this, &config) != HAL_OK)
-            error_handler();
+         adc_base::enable_channel(GPIOA, GPIO_PIN_6, ADC_CHANNEL_3, ADC_REGULAR_RANK_1);
       }
 
       void start()
       {
-         if (HAL_ADC_Start_DMA(this, (uint32_t*) &data[0][0], size()) != HAL_OK)
+         if (HAL_ADC_Start_DMA(this, (uint32_t*) &_data[0][0], size()) != HAL_OK)
             error_handler();
       }
 
-      constexpr std::size_t size() { return buffer_size; }
-      constexpr std::size_t num_channels() { return channels; }
+      void stop()
+      {
+         if (HAL_ADC_Stop_DMA(this))
+            error_handler();
+      }
 
-      buffer_iterator_type begin() const { return data.begin(); }
-      buffer_iterator_type middle() const { return data.begin() + (buffer_size / 2); }
-      buffer_iterator_type end() const { return data.end(); }
+      void clear()
+      {
+         for (auto& buff : _data)
+            buff.fill(0);
+      }
 
-      buffer_type data;
+      constexpr std::size_t size() const           { return buffer_size; }
+      constexpr std::size_t num_channels() const   { return channels; }
+
+      buffer_iterator_type begin() const           { return _data.begin(); }
+      buffer_iterator_type middle() const          { return _data.begin() + (buffer_size / 2); }
+      buffer_iterator_type end() const             { return _data.end(); }
+
+      buffer_type       _data;
    };
 }}
 
