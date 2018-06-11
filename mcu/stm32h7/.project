@@ -44,9 +44,19 @@
 			<locationURI>virtual:/virtual</locationURI>
 		</link>
 		<link>
+			<name>src/adc.cpp</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/src/adc.cpp</locationURI>
+		</link>
+		<link>
 			<name>src/startup.cpp</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/src/startup.cpp</locationURI>
+		</link>
+		<link>
+			<name>tests/adc1.cpp</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/tests/adc1.cpp</locationURI>
 		</link>
 		<link>
 			<name>tests/gpio1.cpp</name>

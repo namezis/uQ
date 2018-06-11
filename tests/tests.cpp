@@ -5,7 +5,7 @@
    file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 =============================================================================*/
 
-#define TIMER_TEST1
+#define ADC_TEST1
 
 #ifdef GPIO_TEST1
 # include "gpio1.cpp"
@@ -23,3 +23,6 @@
 # include "timer1.cpp"
 #endif
 
+#ifdef ADC_TEST1
+# include "adc1.cpp"
+#endif
