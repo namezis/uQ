@@ -8,10 +8,36 @@
 
 namespace cycfi { namespace uq { namespace detail
 {
-   void adc_base::construct(ADC_TypeDef* adc)
+   void adc_base::dma_setup()
    {
-      uq::init();
+      __HAL_RCC_ADC12_CLK_ENABLE();                // ADC Periph clock enable
+      __HAL_RCC_ADC_CONFIG(RCC_ADCCLKSOURCE_CLKP); // ADC Periph interface clock configuration
+      __HAL_RCC_DMA1_CLK_ENABLE();                 // Enable DMA clock
 
+      _dma_handle.Instance                 = DMA1_Stream1;
+      _dma_handle.Init.Request             = DMA_REQUEST_ADC1;
+      _dma_handle.Init.Direction           = DMA_PERIPH_TO_MEMORY;
+      _dma_handle.Init.PeriphInc           = DMA_PINC_DISABLE;
+      _dma_handle.Init.MemInc              = DMA_MINC_ENABLE;
+      _dma_handle.Init.PeriphDataAlignment = DMA_PDATAALIGN_HALFWORD;
+      _dma_handle.Init.MemDataAlignment    = DMA_MDATAALIGN_HALFWORD;
+      _dma_handle.Init.Mode                = DMA_CIRCULAR;
+      _dma_handle.Init.Priority            = DMA_PRIORITY_MEDIUM;
+
+      // Deinitialize  & Initialize the DMA for new transfer
+      HAL_DMA_DeInit(&_dma_handle);
+      HAL_DMA_Init(&_dma_handle);
+
+      // Associate the DMA handle
+      __HAL_LINKDMA(this, DMA_Handle, _dma_handle);
+
+      // NVIC configuration for DMA Input data interrupt
+      HAL_NVIC_SetPriority(DMA1_Stream1_IRQn, 1, 0);
+      HAL_NVIC_EnableIRQ(DMA1_Stream1_IRQn);
+   }
+
+   void adc_base::adc_setup(ADC_TypeDef* adc)
+   {
       Instance = adc;
       if (HAL_ADC_DeInit(this) != HAL_OK)
          error_handler();
@@ -41,34 +67,6 @@ namespace cycfi { namespace uq { namespace detail
          error_handler();
    }
 
-   void adc_base::dma_setup()
-   {
-      __HAL_RCC_ADC12_CLK_ENABLE();                // ADC Periph clock enable
-      __HAL_RCC_ADC_CONFIG(RCC_ADCCLKSOURCE_CLKP); // ADC Periph interface clock configuration
-      __HAL_RCC_DMA1_CLK_ENABLE();                 // Enable DMA clock
-
-      _dma_handle.Instance                 = DMA1_Stream1;
-      _dma_handle.Init.Request             = DMA_REQUEST_ADC1;
-      _dma_handle.Init.Direction           = DMA_PERIPH_TO_MEMORY;
-      _dma_handle.Init.PeriphInc           = DMA_PINC_DISABLE;
-      _dma_handle.Init.MemInc              = DMA_MINC_ENABLE;
-      _dma_handle.Init.PeriphDataAlignment = DMA_PDATAALIGN_HALFWORD;
-      _dma_handle.Init.MemDataAlignment    = DMA_MDATAALIGN_HALFWORD;
-      _dma_handle.Init.Mode                = DMA_CIRCULAR;
-      _dma_handle.Init.Priority            = DMA_PRIORITY_MEDIUM;
-
-      // Deinitialize  & Initialize the DMA for new transfer
-      HAL_DMA_DeInit(&_dma_handle);
-      HAL_DMA_Init(&_dma_handle);
-
-      // Associate the DMA handle
-      __HAL_LINKDMA(this, DMA_Handle, _dma_handle);
-
-      // NVIC configuration for DMA Input data interrupt
-      HAL_NVIC_SetPriority(DMA1_Stream1_IRQn, 1, 0);
-      HAL_NVIC_EnableIRQ(DMA1_Stream1_IRQn);
-   }
-
    void adc_base::enable_channel(
       GPIO_TypeDef* gpio
     , std::uint32_t pin
@@ -95,13 +93,6 @@ namespace cycfi { namespace uq { namespace detail
    }
 }}}
 
-extern "C"
-{
-   void HAL_ADC_MspInit(ADC_HandleTypeDef* hadc)
-   {
-      static_cast<cycfi::uq::detail::adc_base*>(hadc)->dma_setup();
-   }
-}
 
 
 

@@ -38,7 +38,9 @@ namespace cycfi { namespace uq
       adc()
       {
          constexpr auto adc = detail::get_adc(id_);
-         adc_base::construct(adc);
+         uq::init();
+         adc_base::dma_setup(adc);
+         adc_base::adc_setup(adc);
       }
 
       // template <std::size_t channel>

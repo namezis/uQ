@@ -14,7 +14,7 @@ namespace cycfi { namespace uq { namespace detail
 {
    struct adc_base : ADC_HandleTypeDef
    {
-      void              construct(ADC_TypeDef* adc);
+      void              adc_setup(ADC_TypeDef* adc);
       void              dma_setup();
 
       void              enable_channel(
