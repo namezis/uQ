@@ -9,6 +9,7 @@
 
 #include "stm32h7xx_hal.h"
 #include <cstdint>
+#include <utility>
 #include <uq/support.hpp>
 #include <uq/startup.hpp>
 #include <uq/gpio.hpp>
@@ -248,7 +249,7 @@ namespace cycfi { namespace uq { namespace detail
    }
 
    template <std::size_t id, std::uint8_t channel>
-   void enable_adc_channel(adc_base& base, uint32_t rank = 1)
+   void enable_adc_channel(adc_base& base, uint32_t rank)
    {
       static_assert(is_valid_adc_channel<id, channel>(), "Invalid ADC channel");
 
@@ -259,6 +260,19 @@ namespace cycfi { namespace uq { namespace detail
       detail::enable_gpio(config.port);
       base.enable_channel(gpio, config.pin, channel_, rank);
    };
+
+   template <std::size_t id>
+   void enable_all_adc_channels(std::index_sequence<>, adc_base& base, uint32_t rank)
+   {
+      // end recursion
+   }
+
+   template <std::size_t id, std::size_t channel, std::size_t... rest>
+   void enable_all_adc_channels(std::index_sequence<channel, rest...>, adc_base& base, uint32_t rank)
+   {
+      enable_adc_channel<id, channel>(base, rank);
+      enable_all_adc_channels<id>(std::index_sequence<rest...>{}, base, rank + 1);
+   }
 }}}
 
 #endif

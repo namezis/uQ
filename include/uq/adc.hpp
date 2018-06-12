@@ -39,10 +39,14 @@ namespace cycfi { namespace uq
          base_type::setup<id>();
       }
 
-      template <std::size_t channel>
-      void enable_channel()
+      template <std::size_t... channels>
+      void enable_channels()
       {
-         detail::enable_adc_channel<id, channel>(*this);
+         static_assert(sizeof...(channels) == channels_,
+            "Invalid number of channnels");
+
+         using iseq = std::index_sequence<channels...>;
+         detail::enable_all_adc_channels<id>(iseq{}, *this, 1);
       }
 
       void start()
@@ -70,7 +74,7 @@ namespace cycfi { namespace uq
       buffer_iterator_type middle() const          { return _data.begin() + (buffer_size / 2); }
       buffer_iterator_type end() const             { return _data.end(); }
 
-      buffer_type       _data;
+      buffer_type _data;
    };
 }}
 
