@@ -8,8 +8,6 @@
 #define CYCFI_UQ_ADC_HPP_DECEMBER_31_2015
 
 #include <uq/detail/adc.hpp>
-#include <uq/support.hpp>
-#include <uq/startup.hpp>
 #include <array>
 
 namespace cycfi { namespace uq
@@ -21,7 +19,7 @@ namespace cycfi { namespace uq
       std::size_t id_
     , std::size_t channels_
     , std::size_t buffer_size_ = 8>
-   struct adc : public detail::adc_base
+   struct adc : detail::adc_base
    {
       static constexpr std::size_t id = id_;
       static_assert(id >=1 && id <= 3, "Invalid ADC id");
@@ -30,6 +28,7 @@ namespace cycfi { namespace uq
       static constexpr std::size_t buffer_size = buffer_size_;
       static constexpr std::size_t capacity = buffer_size * channels;
 
+      using base_type = detail::adc_base;
       using adc_type = adc;
       using sample_group_type = uint16_t[channels];
       using buffer_type = std::array<sample_group_type, buffer_size>;
@@ -37,10 +36,7 @@ namespace cycfi { namespace uq
 
       adc()
       {
-         constexpr auto adc = detail::get_adc(id_);
-         uq::init();
-         adc_base::dma_setup(adc);
-         adc_base::adc_setup(adc);
+         base_type::setup<id>();
       }
 
       // template <std::size_t channel>
@@ -49,7 +45,7 @@ namespace cycfi { namespace uq
          // Enable GPIO clock
          __HAL_RCC_GPIOA_CLK_ENABLE();
 
-         adc_base::enable_channel(GPIOA, GPIO_PIN_6, ADC_CHANNEL_3, ADC_REGULAR_RANK_1);
+         base_type::enable_channel(GPIOA, GPIO_PIN_6, ADC_CHANNEL_3, ADC_REGULAR_RANK_1);
       }
 
       void start()

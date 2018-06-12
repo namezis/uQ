@@ -10,12 +10,9 @@ namespace cycfi { namespace uq { namespace detail
 {
    void adc_base::dma_setup()
    {
-      __HAL_RCC_ADC12_CLK_ENABLE();                // ADC Periph clock enable
-      __HAL_RCC_ADC_CONFIG(RCC_ADCCLKSOURCE_CLKP); // ADC Periph interface clock configuration
-      __HAL_RCC_DMA1_CLK_ENABLE();                 // Enable DMA clock
+      // Enable DMA clock
+      __HAL_RCC_DMA1_CLK_ENABLE();
 
-      _dma_handle.Instance                 = DMA1_Stream1;
-      _dma_handle.Init.Request             = DMA_REQUEST_ADC1;
       _dma_handle.Init.Direction           = DMA_PERIPH_TO_MEMORY;
       _dma_handle.Init.PeriphInc           = DMA_PINC_DISABLE;
       _dma_handle.Init.MemInc              = DMA_MINC_ENABLE;
@@ -30,10 +27,6 @@ namespace cycfi { namespace uq { namespace detail
 
       // Associate the DMA handle
       __HAL_LINKDMA(this, DMA_Handle, _dma_handle);
-
-      // NVIC configuration for DMA Input data interrupt
-      HAL_NVIC_SetPriority(DMA1_Stream1_IRQn, 1, 0);
-      HAL_NVIC_EnableIRQ(DMA1_Stream1_IRQn);
    }
 
    void adc_base::adc_setup(ADC_TypeDef* adc)
@@ -58,7 +51,7 @@ namespace cycfi { namespace uq { namespace detail
       Init.OversamplingMode         = DISABLE;                          // No oversampling
       Init.BoostMode                = ENABLE;                           // Enable Boost mode as ADC clock frequency is bigger than 20 MHz
 
-      // Initialize ADC peripheral according to the passed parameters
+      // Initialize ADC
       if (HAL_ADC_Init(this) != HAL_OK)
          error_handler();
 
