@@ -216,11 +216,11 @@ namespace cycfi { namespace uq { namespace detail
       return -1;
    }
 
-   template <typename ConfigList>
+   template <std::uint8_t channel, std::size_t N>
    constexpr adc_gpio_config
-   find_adc_gpio_config(ConfigList const& config_list, std::uint8_t channel)
+   find_adc_gpio_config(adc_gpio_config const (&config_list)[N])
    {
-      for (auto i = 0; i != sizeof(config_list); ++i)
+      for (auto i = 0; i != N; ++i)
       {
          if (config_list[i].channel == channel)
             return config_list[i];
@@ -228,30 +228,37 @@ namespace cycfi { namespace uq { namespace detail
       return { channel, port_enum::none };
    }
 
+   template <std::size_t id, std::uint8_t channel>
    constexpr adc_gpio_config
-   get_adc_gpio_config(std::size_t id, std::uint8_t channel)
+   get_adc_gpio_config()
    {
       switch (id)
       {
-         case 1: return find_adc_gpio_config(adc1_gpio_config, channel);
-         case 2: return find_adc_gpio_config(adc2_gpio_config, channel);
-         case 3: return find_adc_gpio_config(adc3_gpio_config, channel);
+         case 1: return find_adc_gpio_config<channel>(adc1_gpio_config);
+         case 2: return find_adc_gpio_config<channel>(adc2_gpio_config);
+         case 3: return find_adc_gpio_config<channel>(adc3_gpio_config);
       }
       return { channel, port_enum::none };
    }
 
    template <std::size_t id, std::uint8_t channel>
+   constexpr bool is_valid_adc_channel()
+   {
+      return channel <= 16 && get_adc_gpio_config<id, channel>().port != port_enum::none;
+   }
+
+   template <std::size_t id, std::uint8_t channel>
    void enable_adc_channel(adc_base& base, uint32_t rank = 1)
    {
-      constexpr auto config = get_adc_gpio_config(id, channel);
-      static_assert(config.port != port_enum::none, "Error. Invalid ADC channel.");
+      static_assert(is_valid_adc_channel<id, channel>(), "Invalid ADC channel");
 
+      constexpr auto config = get_adc_gpio_config<id, channel>();
       constexpr auto gpio = detail::gpio(config.port);
       constexpr auto channel_ = get_adc_channel(channel);
 
       detail::enable_gpio(config.port);
       base.enable_channel(gpio, config.pin, channel_, rank);
-   }
+   };
 }}}
 
 #endif
