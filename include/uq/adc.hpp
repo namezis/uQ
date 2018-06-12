@@ -39,13 +39,10 @@ namespace cycfi { namespace uq
          base_type::setup<id>();
       }
 
-      // template <std::size_t channel>
+      template <std::size_t channel>
       void enable_channel()
       {
-         // Enable GPIO clock
-         __HAL_RCC_GPIOA_CLK_ENABLE();
-
-         base_type::enable_channel(GPIOA, GPIO_PIN_6, ADC_CHANNEL_3, ADC_REGULAR_RANK_1);
+         detail::enable_adc_channel<id, channel>(*this);
       }
 
       void start()

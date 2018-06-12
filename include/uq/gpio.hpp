@@ -24,7 +24,7 @@ namespace cycfi { namespace uq
    ////////////////////////////////////////////////////////////////////////////
    enum class port_enum
    {
-      a, b, c, d, e, f, g, h, i, j, k
+      a, b, c, d, e, f, g, h, i, j, k, none
    };
 
    enum class port_speed_enum

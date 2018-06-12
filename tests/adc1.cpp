@@ -12,7 +12,7 @@ uq::adc<1, 1> adc;
 
 int main()
 {
-   adc.enable_channel();
+   adc.enable_channel<3>();
    adc.start();
    while (true)
    {
