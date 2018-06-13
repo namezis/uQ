@@ -16,8 +16,9 @@ namespace cycfi { namespace uq { namespace detail
     , std::uint16_t* pdata
     , std::size_t size
    )
-    : _pdata(reinterpret_cast<std::uint32_t*>(pdata))
+    : _pdata(pdata)
     , _size(size)
+    , _id(id)
    {
       adc_ptr[id-1] = this;
    }

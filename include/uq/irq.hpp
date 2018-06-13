@@ -10,7 +10,6 @@
 #include <uq/gpio.hpp>
 #include <uq/adc.hpp>
 
-
 namespace cycfi { namespace uq { namespace detail
 {
    ////////////////////////////////////////////////////////////////////////////
@@ -160,20 +159,35 @@ extern "C"
    {
       // Invalidate Data Cache to get the updated content of the SRAM on the
       // first half of the ADC converted data buffer.
-      using namespace cycfi::uq::detail;
-      auto adc = static_cast<adc_base*>(hadc);
-      auto size = adc._size / 2;
-      SCB_InvalidateDCache_by_Addr(adc._pdata, size);
+      using namespace cycfi::uq;
+      auto adc = static_cast<detail::adc_base*>(hadc);
+      auto pdata = reinterpret_cast<std::uint32_t*>(adc->_pdata);
+      SCB_InvalidateDCache_by_Addr(pdata, adc->_size);
+
+      switch (adc->_id)
+      {
+         case 1: irq(adc_conversion_half_complete<1>{}); break;
+         case 2: irq(adc_conversion_half_complete<2>{}); break;
+         case 3: irq(adc_conversion_half_complete<3>{}); break;
+      }
    }
 
    void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
    {
       // Invalidate Data Cache to get the updated content of the SRAM on the
       // second half of the ADC converted data buffer.
-      using namespace cycfi::uq::detail;
-      auto adc = static_cast<adc_base*>(hadc);
-      auto size = adc._size / 2;
-      SCB_InvalidateDCache_by_Addr(adc._pdata + size, size);
+      using namespace cycfi::uq;
+      auto adc = static_cast<detail::adc_base*>(hadc);
+      auto size = adc->_size;
+      auto pdata = reinterpret_cast<std::uint32_t*>(adc->_pdata + (size/2));
+      SCB_InvalidateDCache_by_Addr(pdata, size);
+
+      switch (adc->_id)
+      {
+         case 1: irq(adc_conversion_complete<1>{}); break;
+         case 2: irq(adc_conversion_complete<2>{}); break;
+         case 3: irq(adc_conversion_complete<3>{}); break;
+      }
    }
 }
 

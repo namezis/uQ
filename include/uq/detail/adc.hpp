@@ -35,8 +35,9 @@ namespace cycfi { namespace uq { namespace detail
                          , uint32_t rank);
 
       DMA_HandleTypeDef _dma_handle;
-      std::uint32_t*    _pdata;
+      std::uint16_t*    _pdata;
       std::size_t       _size;
+      std::size_t       _id;
    };
 
    inline void enable_adc_clock(std::size_t id)
