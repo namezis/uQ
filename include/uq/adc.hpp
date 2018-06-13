@@ -8,6 +8,7 @@
 #define CYCFI_UQ_ADC_HPP_DECEMBER_31_2015
 
 #include <uq/detail/adc.hpp>
+#include <uq/timer.hpp>
 #include <algorithm>
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -40,10 +41,12 @@ namespace cycfi { namespace uq
       using base_type = detail::adc_base;
       using adc_type = adc;
 
-      adc()
+      template <std::size_t tid>
+      adc(timer<tid>& tmr)
        : adc_base(id, _data, capacity)
       {
-         base_type::setup<id>();
+         static_assert(detail::is_valid_adc_timer(tid), "Invalid Timer for ADC");
+         base_type::setup<id>(tmr);
       }
 
       template <std::size_t... channels>
@@ -78,7 +81,7 @@ namespace cycfi { namespace uq
       uint16_t const*   middle() const    { return _data + (capacity / 2); }
       uint16_t const*   end() const       { return _data + capacity; }
 
-      uint16_t _data[capacity] __attribute__((aligned(32)));
+      uint16_t          _data[capacity] __attribute__((aligned(32)));
    };
 }}
 

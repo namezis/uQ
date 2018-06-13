@@ -12,6 +12,7 @@
 #include <uq/support.hpp>
 #include <uq/startup.hpp>
 #include <uq/gpio.hpp>
+#include <uq/timer.hpp>
 
 namespace cycfi { namespace uq { namespace detail
 {
@@ -22,10 +23,10 @@ namespace cycfi { namespace uq { namespace detail
                          , std::uint16_t* pdata
                          , std::size_t length);
 
-                        template <std::size_t id>
-      void              setup();
+                        template <std::size_t id, std::size_t tid>
+      void              setup(timer<tid>& tmr);
 
-      void              adc_setup(ADC_TypeDef* adc);
+      void              adc_setup(ADC_TypeDef* adc, std::uint32_t timer_trigger);
       void              dma_setup();
 
       void              enable_channel(
@@ -102,8 +103,31 @@ namespace cycfi { namespace uq { namespace detail
       return IRQn_Type(0); // can't happen (we a have static assert in adc class)
    }
 
-   template <std::size_t id>
-   void adc_base::setup()
+   ////////////////////////////////////////////////////////////////////////////
+   // Timer trigger ID
+   ////////////////////////////////////////////////////////////////////////////
+   constexpr int get_timer_trigger(std::size_t timer_id)
+   {
+      switch (timer_id)
+      {
+         case 1:  return ADC_EXTERNALTRIG_T1_TRGO;    break;
+         case 2:  return ADC_EXTERNALTRIG_T2_TRGO;    break;
+         case 3:  return ADC_EXTERNALTRIG_T3_TRGO;    break;
+         case 4:  return ADC_EXTERNALTRIG_T4_TRGO;    break;
+         case 6:  return ADC_EXTERNALTRIG_T6_TRGO;    break;
+         case 8:  return ADC_EXTERNALTRIG_T8_TRGO;    break;
+         case 15: return ADC_EXTERNALTRIG_T15_TRGO;   break;
+      }
+      return -1;
+   }
+
+   constexpr bool is_valid_adc_timer(std::size_t timer_id)
+   {
+      return get_timer_trigger(timer_id) != -1;
+   }
+
+   template <std::size_t id, std::size_t tid>
+   void adc_base::setup(timer<tid>& tmr)
    {
       uq::init();
       enable_adc_clock(id);
@@ -122,9 +146,19 @@ namespace cycfi { namespace uq { namespace detail
       HAL_NVIC_EnableIRQ(dma_irq_n);
 
       // Configure ADC
-      constexpr auto adc = detail::get_adc(id);
-      adc_base::adc_setup(adc);
+      constexpr auto adc = get_adc(id);
+      constexpr auto timer_trigger = get_timer_trigger(tid);
+      adc_base::adc_setup(adc, timer_trigger);
+
+      // Configure master clock
+      TIM_MasterConfigTypeDef master_clock_config;
+      master_clock_config.MasterOutputTrigger = TIM_TRGO_UPDATE;
+      master_clock_config.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+      if (HAL_TIMEx_MasterConfigSynchronization(&tmr, &master_clock_config) != HAL_OK)
+         error_handler();
    }
+
+
 
    ////////////////////////////////////////////////////////////////////////////
    // adc gpio config
@@ -138,64 +172,55 @@ namespace cycfi { namespace uq { namespace detail
 
    constexpr adc_gpio_config adc1_gpio_config[] =
    {
-      // Differential
       {  2, port::portf, 11 }
     , {  3, port::porta,  6 }  // common with adc2!
     , {  4, port::portc,  4 }  // common with adc2!
     , {  5, port::portb,  0 }  // common with adc2!
-    , { 10, port::portc,  0 }  // common with adc2 and adc3!
-    , { 16, port::porta,  0 }
-    , { 18, port::porta,  4 }  // common with adc2!
-
-      // Single ended
     , {  6, port::portf, 12 }
     , {  7, port::porta,  7 }  // common with adc2!
     , {  8, port::portc,  5 }  // common with adc2!
     , {  9, port::portb,  0 }  // common with adc2!
+    , { 10, port::portc,  0 }  // common with adc2 and adc3!
     , { 11, port::portc,  1 }  // common with adc2 and adc3!
     , { 14, port::porta,  2 }  // common with adc2!
     , { 15, port::porta,  3 }  // common with adc2!
+    , { 16, port::porta,  0 }
+    , { 18, port::porta,  4 }  // common with adc2!
     , { 17, port::porta,  1 }
     , { 19, port::porta,  5 }  // common with adc2!
    };
 
    constexpr adc_gpio_config adc2_gpio_config[] =
    {
-      // Differential
       {  2, port::portf, 13 }
     , {  3, port::porta,  6 }  // common with adc1!
     , {  4, port::portc,  4 }  // common with adc1!
     , {  5, port::portb,  0 }  // common with adc1!
-    , { 10, port::portc,  0 }  // common with adc1 and adc3!
-    , { 18, port::porta,  4 }  // common with adc1!
-
-      // Single ended
     , {  6, port::portf, 14 }
     , {  7, port::porta,  7 }  // common adc1!
     , {  8, port::portc,  5 }  // common adc1!
     , {  9, port::portb,  0 }  // common adc1!
+    , { 10, port::portc,  0 }  // common with adc1 and adc3!
     , { 11, port::portc,  1 }  // common adc2 and adc3!
     , { 14, port::porta,  2 }  // common with adc1!
     , { 15, port::porta,  3 }  // common with adc1!
+    , { 18, port::porta,  4 }  // common with adc1!
     , { 19, port::porta,  5 }  // common adc1!
    };
 
    constexpr adc_gpio_config adc3_gpio_config[] =
    {
-      // Differential
-      {  1, port::portf,  2 }
+      {  0, port::portc,  2 }
+    , {  1, port::portf,  2 }
     , {  2, port::portf,  9 }
     , {  3, port::portf,  7 }
     , {  4, port::portf,  5 }
     , {  5, port::portf,  3 }
-    , { 10, port::portc,  0 }  // common with adc1 and adc2!
-
-      // Single ended
-    , {  0, port::portc,  2 }
     , {  6, port::portf, 10 }
     , {  7, port::portf,  8 }
     , {  8, port::portf,  6 }
     , {  9, port::portf,  4 }
+    , { 10, port::portc,  0 }  // common with adc1 and adc2!
     , { 11, port::portc,  1 }  // common with adc1 and adc2!
    };
 

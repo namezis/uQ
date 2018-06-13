@@ -44,7 +44,7 @@ namespace cycfi { namespace uq { namespace detail
       __HAL_LINKDMA(this, DMA_Handle, _dma_handle);
    }
 
-   void adc_base::adc_setup(ADC_TypeDef* adc)
+   void adc_base::adc_setup(ADC_TypeDef* adc, std::uint32_t timer_trigger)
    {
       Instance = adc;
       if (HAL_ADC_DeInit(this) != HAL_OK)
@@ -55,12 +55,12 @@ namespace cycfi { namespace uq { namespace detail
       Init.ScanConvMode             = DISABLE;                          // Sequencer disabled (ADC conversion on only 1 channel: channel set on rank 1)
       Init.EOCSelection             = ADC_EOC_SINGLE_CONV;              // EOC flag picked-up to indicate conversion end
       Init.LowPowerAutoWait         = DISABLE;                          // Auto-delayed conversion feature disabled
-      Init.ContinuousConvMode       = ENABLE;                           // Continuous mode enabled (automatic conversion restart after each conversion)
+      Init.ContinuousConvMode       = DISABLE;                          // Continuous mode disabled to have only 1 conversion at each conversion trig
       Init.NbrOfConversion          = 1;                                // Parameter discarded because sequencer is disabled
       Init.DiscontinuousConvMode    = DISABLE;                          // Parameter discarded because sequencer is disabled
       Init.NbrOfDiscConversion      = 1;                                // Parameter discarded because sequencer is disabled
-      Init.ExternalTrigConv         = ADC_SOFTWARE_START;               // Software start to trig the 1st conversion manually, without external event
-      Init.ExternalTrigConvEdge     = ADC_EXTERNALTRIGCONVEDGE_NONE;    // Parameter discarded because software trigger chosen
+      Init.ExternalTrigConv         = timer_trigger;                    // Conversion start trigged at each external event
+      Init.ExternalTrigConvEdge     = ADC_EXTERNALTRIGCONVEDGE_RISING;  // Trigger on rising edge
       Init.ConversionDataManagement = ADC_CONVERSIONDATA_DMA_CIRCULAR;  // ADC DMA circular requested
       Init.Overrun                  = ADC_OVR_DATA_OVERWRITTEN;         // DR register is overwritten with the last conversion result in case of overrun
       Init.OversamplingMode         = DISABLE;                          // No oversampling
