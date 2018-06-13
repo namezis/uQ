@@ -8,9 +8,16 @@
 #define CYCFI_UQ_ADC_HPP_DECEMBER_31_2015
 
 #include <uq/detail/adc.hpp>
-#include <uq/support.hpp>
-#include <uq/startup.hpp>
-#include <array>
+#include <algorithm>
+
+///////////////////////////////////////////////////////////////////////////////
+// Interrupt Keys (This should be placed in the global scope)
+///////////////////////////////////////////////////////////////////////////////
+template <std::size_t id>
+struct adc_conversion_half_complete {};
+
+template <std::size_t id>
+struct adc_conversion_complete {};
 
 namespace cycfi { namespace uq
 {
@@ -21,7 +28,7 @@ namespace cycfi { namespace uq
       std::size_t id_
     , std::size_t channels_
     , std::size_t buffer_size_ = 8>
-   struct adc : public detail::adc_base
+   struct adc : detail::adc_base
    {
       static constexpr std::size_t id = id_;
       static_assert(id >=1 && id <= 3, "Invalid ADC id");
@@ -30,29 +37,29 @@ namespace cycfi { namespace uq
       static constexpr std::size_t buffer_size = buffer_size_;
       static constexpr std::size_t capacity = buffer_size * channels;
 
+      using base_type = detail::adc_base;
       using adc_type = adc;
-      using sample_group_type = uint16_t[channels];
-      using buffer_type = std::array<sample_group_type, buffer_size>;
-      using buffer_iterator_type = typename buffer_type::const_iterator;
 
       adc()
+       : adc_base(id, _data, capacity)
       {
-         constexpr auto adc = detail::get_adc(id_);
-         adc_base::construct(adc);
+         base_type::setup<id>();
       }
 
-      // template <std::size_t channel>
-      void enable_channel()
+      template <std::size_t... channels>
+      void enable_channels()
       {
-         // Enable GPIO clock
-         __HAL_RCC_GPIOA_CLK_ENABLE();
+         static_assert(sizeof...(channels) == channels_,
+            "Invalid number of channnels");
 
-         adc_base::enable_channel(GPIOA, GPIO_PIN_6, ADC_CHANNEL_3, ADC_REGULAR_RANK_1);
+         using iseq = std::index_sequence<channels...>;
+         detail::enable_all_adc_channels<id>(iseq{}, *this, 1);
       }
 
       void start()
       {
-         if (HAL_ADC_Start_DMA(this, (uint32_t*) &_data[0][0], size()) != HAL_OK)
+         auto data = reinterpret_cast<uint32_t*>(_data);
+         if (HAL_ADC_Start_DMA(this, data, capacity) != HAL_OK)
             error_handler();
       }
 
@@ -64,18 +71,14 @@ namespace cycfi { namespace uq
 
       void clear()
       {
-         for (auto& buff : _data)
-            buff.fill(0);
+         std::fill(_data, _data + capacity, 0);
       }
 
-      constexpr std::size_t size() const           { return buffer_size; }
-      constexpr std::size_t num_channels() const   { return channels; }
+      uint16_t const*   begin() const     { return _data; }
+      uint16_t const*   middle() const    { return _data + (capacity / 2); }
+      uint16_t const*   end() const       { return _data + capacity; }
 
-      buffer_iterator_type begin() const           { return _data.begin(); }
-      buffer_iterator_type middle() const          { return _data.begin() + (buffer_size / 2); }
-      buffer_iterator_type end() const             { return _data.end(); }
-
-      buffer_type       _data;
+      uint16_t _data[capacity] __attribute__((aligned(32)));
    };
 }}
 

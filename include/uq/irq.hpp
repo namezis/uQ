@@ -8,23 +8,14 @@
 #define CYCFI_QU_IRQ_HPP_DECEMBER_22_2015
 
 #include <uq/gpio.hpp>
-// #include <inf/timer.hpp>
-// #include <inf/adc.hpp>
-// #include <type_traits>
-
-// #if defined(STM32F4)
-// # include <stm32f4xx_ll_dma.h>
-// # include <stm32f4xx_ll_adc.h>
-// #else
-// # error "MCU not supported"
-// #endif
-
-///////////////////////////////////////////////////////////////////////////////
-// Timer Interrupts
-///////////////////////////////////////////////////////////////////////////////
+#include <uq/adc.hpp>
 
 namespace cycfi { namespace uq { namespace detail
 {
+   ////////////////////////////////////////////////////////////////////////////
+   // Timer Interrupts
+   ////////////////////////////////////////////////////////////////////////////
+
    template <std::size_t N>
    void handle_exti()
    {
@@ -161,6 +152,43 @@ extern "C"
  TIMER_INTERRUPT_HANDLER(17)
 #endif
 
+   ////////////////////////////////////////////////////////////////////////////
+   // ADC Interrupts
+   ////////////////////////////////////////////////////////////////////////////
+   void HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef* hadc)
+   {
+      // Invalidate Data Cache to get the updated content of the SRAM on the
+      // first half of the ADC converted data buffer.
+      using namespace cycfi::uq;
+      auto adc = static_cast<detail::adc_base*>(hadc);
+      auto pdata = reinterpret_cast<std::uint32_t*>(adc->_pdata);
+      SCB_InvalidateDCache_by_Addr(pdata, adc->_size);
+
+      switch (adc->_id)
+      {
+         case 1: irq(adc_conversion_half_complete<1>{}); break;
+         case 2: irq(adc_conversion_half_complete<2>{}); break;
+         case 3: irq(adc_conversion_half_complete<3>{}); break;
+      }
+   }
+
+   void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
+   {
+      // Invalidate Data Cache to get the updated content of the SRAM on the
+      // second half of the ADC converted data buffer.
+      using namespace cycfi::uq;
+      auto adc = static_cast<detail::adc_base*>(hadc);
+      auto size = adc->_size;
+      auto pdata = reinterpret_cast<std::uint32_t*>(adc->_pdata + (size/2));
+      SCB_InvalidateDCache_by_Addr(pdata, size);
+
+      switch (adc->_id)
+      {
+         case 1: irq(adc_conversion_complete<1>{}); break;
+         case 2: irq(adc_conversion_complete<2>{}); break;
+         case 3: irq(adc_conversion_complete<3>{}); break;
+      }
+   }
 }
 
 #endif
