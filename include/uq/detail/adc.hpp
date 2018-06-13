@@ -8,7 +8,6 @@
 #define CYCFI_UQ_ADC_DETAIL_HPP_DECEMBER_31_2015
 
 #include "stm32h7xx_hal.h"
-#include <cstdint>
 #include <utility>
 #include <uq/support.hpp>
 #include <uq/startup.hpp>
@@ -18,6 +17,11 @@ namespace cycfi { namespace uq { namespace detail
 {
    struct adc_base : ADC_HandleTypeDef
    {
+                        adc_base(
+                           std::size_t id
+                         , std::uint16_t* pdata
+                         , std::size_t length);
+
                         template <std::size_t id>
       void              setup();
 
@@ -31,6 +35,8 @@ namespace cycfi { namespace uq { namespace detail
                          , uint32_t rank);
 
       DMA_HandleTypeDef _dma_handle;
+      std::uint32_t*    _pdata;
+      std::size_t       _size;
    };
 
    inline void enable_adc_clock(std::size_t id)

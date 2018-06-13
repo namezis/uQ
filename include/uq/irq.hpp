@@ -8,23 +8,15 @@
 #define CYCFI_QU_IRQ_HPP_DECEMBER_22_2015
 
 #include <uq/gpio.hpp>
-// #include <inf/timer.hpp>
-// #include <inf/adc.hpp>
-// #include <type_traits>
+#include <uq/adc.hpp>
 
-// #if defined(STM32F4)
-// # include <stm32f4xx_ll_dma.h>
-// # include <stm32f4xx_ll_adc.h>
-// #else
-// # error "MCU not supported"
-// #endif
-
-///////////////////////////////////////////////////////////////////////////////
-// Timer Interrupts
-///////////////////////////////////////////////////////////////////////////////
 
 namespace cycfi { namespace uq { namespace detail
 {
+   ////////////////////////////////////////////////////////////////////////////
+   // Timer Interrupts
+   ////////////////////////////////////////////////////////////////////////////
+
    template <std::size_t N>
    void handle_exti()
    {
@@ -161,6 +153,28 @@ extern "C"
  TIMER_INTERRUPT_HANDLER(17)
 #endif
 
+   ////////////////////////////////////////////////////////////////////////////
+   // ADC Interrupts
+   ////////////////////////////////////////////////////////////////////////////
+   void HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef* hadc)
+   {
+      // Invalidate Data Cache to get the updated content of the SRAM on the
+      // first half of the ADC converted data buffer.
+      using namespace cycfi::uq::detail;
+      auto adc = static_cast<adc_base*>(hadc);
+      auto size = adc._size / 2;
+      SCB_InvalidateDCache_by_Addr(adc._pdata, size);
+   }
+
+   void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
+   {
+      // Invalidate Data Cache to get the updated content of the SRAM on the
+      // second half of the ADC converted data buffer.
+      using namespace cycfi::uq::detail;
+      auto adc = static_cast<adc_base*>(hadc);
+      auto size = adc._size / 2;
+      SCB_InvalidateDCache_by_Addr(adc._pdata + size, size);
+   }
 }
 
 #endif

@@ -9,6 +9,7 @@
 namespace uq = cycfi::uq;
 
 uq::adc<1, 1> adc;
+int x = 123;
 
 int main()
 {
@@ -16,44 +17,45 @@ int main()
    adc.start();
    while (true)
    {
+      x = 456;
    }
 }
 
-extern "C"
-{
-   /**
-    * @brief  Conversion complete callback in non-blocking mode
-    * @param  hadc: ADC handle
-    * @retval None
-    */
-   void HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef* hadc)
-   {
-   /* Invalidate Data Cache to get the updated content of the SRAM on the first half of the ADC converted data buffer: 32 bytes */
-      SCB_InvalidateDCache_by_Addr((uint32_t*) adc.begin(), adc.size());
-   }
+// extern "C"
+// {
+//    /**
+//     * @brief  Conversion complete callback in non-blocking mode
+//     * @param  hadc: ADC handle
+//     * @retval None
+//     */
+//    // void HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef* hadc)
+//    // {
+//    // /* Invalidate Data Cache to get the updated content of the SRAM on the first half of the ADC converted data buffer: 32 bytes */
+//    //    SCB_InvalidateDCache_by_Addr((uint32_t*) adc.begin(), adc.capacity / 2);
+//    // }
 
-   /**
-    * @brief  Conversion DMA half-transfer callback in non-blocking mode
-    * @param  hadc: ADC handle
-    * @retval None
-    */
-   void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
-   {
-      /* Invalidate Data Cache to get the updated content of the SRAM on the second half of the ADC converted data buffer: 32 bytes */
-      SCB_InvalidateDCache_by_Addr((uint32_t*) adc.middle(), adc.size());
-   }
+//    // /**
+//    //  * @brief  Conversion DMA half-transfer callback in non-blocking mode
+//    //  * @param  hadc: ADC handle
+//    //  * @retval None
+//    //  */
+//    // void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
+//    // {
+//    //    /* Invalidate Data Cache to get the updated content of the SRAM on the second half of the ADC converted data buffer: 32 bytes */
+//    //    SCB_InvalidateDCache_by_Addr((uint32_t*) adc.middle(), adc.capacity / 2);
+//    // }
 
-   /**
-   * @brief  This function handles DMA1_Stream1_IRQHandler interrupt request.
-   * @param  None
-   * @retval None
-   */
-   void DMA1_Stream1_IRQHandler(void)
-   {
-      HAL_DMA_IRQHandler(adc.DMA_Handle);
-   }
+//    /**
+//    * @brief  This function handles DMA1_Stream1_IRQHandler interrupt request.
+//    * @param  None
+//    * @retval None
+//    */
+//    // void DMA1_Stream1_IRQHandler(void)
+//    // {
+//    //    HAL_DMA_IRQHandler(adc.DMA_Handle);
+//    // }
 
-}
+// }
 
 
 

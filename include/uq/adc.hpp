@@ -8,7 +8,7 @@
 #define CYCFI_UQ_ADC_HPP_DECEMBER_31_2015
 
 #include <uq/detail/adc.hpp>
-#include <array>
+#include <algorithm>
 
 namespace cycfi { namespace uq
 {
@@ -30,11 +30,9 @@ namespace cycfi { namespace uq
 
       using base_type = detail::adc_base;
       using adc_type = adc;
-      using sample_group_type = uint16_t[channels];
-      using buffer_type = std::array<sample_group_type, buffer_size>;
-      using buffer_iterator_type = typename buffer_type::const_iterator;
 
       adc()
+       : adc_base(id, _data, capacity)
       {
          base_type::setup<id>();
       }
@@ -51,7 +49,8 @@ namespace cycfi { namespace uq
 
       void start()
       {
-         if (HAL_ADC_Start_DMA(this, (uint32_t*) &_data[0][0], size()) != HAL_OK)
+         auto data = reinterpret_cast<uint32_t*>(_data);
+         if (HAL_ADC_Start_DMA(this, data, capacity) != HAL_OK)
             error_handler();
       }
 
@@ -63,18 +62,14 @@ namespace cycfi { namespace uq
 
       void clear()
       {
-         for (auto& buff : _data)
-            buff.fill(0);
+         std::fill(_data, _data + capacity, 0);
       }
 
-      constexpr std::size_t size() const           { return buffer_size; }
-      constexpr std::size_t num_channels() const   { return channels; }
+      uint16_t const*   begin() const     { return _data; }
+      uint16_t const*   middle() const    { return _data + (capacity / 2); }
+      uint16_t const*   end() const       { return _data + capacity; }
 
-      buffer_iterator_type begin() const           { return _data.begin(); }
-      buffer_iterator_type middle() const          { return _data.begin() + (buffer_size / 2); }
-      buffer_iterator_type end() const             { return _data.end(); }
-
-      buffer_type _data;
+      uint16_t _data[capacity] __attribute__((aligned(32)));
    };
 }}
 

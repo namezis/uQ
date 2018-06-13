@@ -5,9 +5,23 @@
    file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 =============================================================================*/
 #include <uq/adc.hpp>
+#include <cstdint>
 
 namespace cycfi { namespace uq { namespace detail
 {
+   adc_base* adc_ptr[] = { nullptr, nullptr, nullptr };
+
+   adc_base::adc_base(
+      std::size_t id
+    , std::uint16_t* pdata
+    , std::size_t size
+   )
+    : _pdata(reinterpret_cast<std::uint32_t*>(pdata))
+    , _size(size)
+   {
+      adc_ptr[id-1] = this;
+   }
+
    void adc_base::dma_setup()
    {
       // Enable DMA clock
@@ -86,6 +100,13 @@ namespace cycfi { namespace uq { namespace detail
    }
 }}}
 
-
+extern "C"
+{
+   void DMA1_Stream1_IRQHandler(void)
+   {
+      using namespace cycfi::uq::detail;
+      HAL_DMA_IRQHandler(adc_ptr[0]->DMA_Handle);
+   }
+}
 
 
