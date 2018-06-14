@@ -271,7 +271,6 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/nucleo-h743zi_hal_lib/HAL_Driver/Inc/Legacy}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/nucleo-h743zi_hal_lib/CMSIS/core}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/nucleo-h743zi_hal_lib/CMSIS/device}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/nucleo-h743zi_hal_lib/Utilities/STM32H7xx_Nucleo_144}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../include&quot;"/>
 								</option>
 								<inputType id="fr.ac6.managedbuild.tool.gnu.cross.c.compiler.input.c.529611985" superClass="fr.ac6.managedbuild.tool.gnu.cross.c.compiler.input.c"/>
@@ -295,9 +294,9 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/nucleo-h743zi_hal_lib/HAL_Driver/Inc/Legacy}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/nucleo-h743zi_hal_lib/CMSIS/core}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/nucleo-h743zi_hal_lib/CMSIS/device}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/nucleo-h743zi_hal_lib/Utilities/STM32H7xx_Nucleo_144}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../include&quot;"/>
 								</option>
+								<option id="gnu.cpp.compiler.option.dialect.std.514755923" superClass="gnu.cpp.compiler.option.dialect.std" useByScannerDiscovery="true" value="gnu.cpp.compiler.dialect.default" valueType="enumerated"/>
 								<inputType id="fr.ac6.managedbuild.tool.gnu.cross.cpp.compiler.input.cpp.1329042827" superClass="fr.ac6.managedbuild.tool.gnu.cross.cpp.compiler.input.cpp"/>
 								<inputType id="fr.ac6.managedbuild.tool.gnu.cross.cpp.compiler.input.s.793193038" superClass="fr.ac6.managedbuild.tool.gnu.cross.cpp.compiler.input.s"/>
 							</tool>
