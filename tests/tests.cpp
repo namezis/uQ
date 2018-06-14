@@ -5,7 +5,7 @@
    file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 =============================================================================*/
 
-#define ADC_TEST1
+#define GPIO_TEST1
 
 #ifdef GPIO_TEST1
 # include "gpio1.cpp"

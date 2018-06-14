@@ -4,25 +4,36 @@
    Distributed under the Boost Software License, Version 1.0. (See accompanying
    file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 =============================================================================*/
+#include <uq/support.hpp>
 #include <uq/startup.hpp>
+#include <uq/gpio.hpp>
 #include "stm32h7xx_hal.h"
-#include "stm32h7xx_nucleo_144.h"
 
 namespace cycfi { namespace uq
 {
 	// This function is executed in case of error occurrence.
 	void error_handler()
 	{
-	   BSP_LED_On(LED3); // $$$ FIXME $$$
-	   while (1)
-	   {
-	   }
+	   error_led led;
+      led = 1;
+	   while (true)
+      {
+         delay_ms(1000);
+         led = 0;
+         for (int i = 0; i < 3; ++i)
+         {
+            delay_ms(50);
+            led = 1;
+            delay_ms(100);
+            led = 0;
+         }
+         delay_ms(50);
+         led = 1;
+      }
 	}
 
    namespace
    {
-
-
       // System Clock Configuration
       //    The system Clock is configured as follows:
       //

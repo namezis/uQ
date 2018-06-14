@@ -17,6 +17,8 @@ int main()
 {
    uq::main_led led;
 
+   uq::error_handler();
+
    while (true)
    {
       uq::delay_ms(1000);

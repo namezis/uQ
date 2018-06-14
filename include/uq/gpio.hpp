@@ -97,58 +97,31 @@ namespace cycfi { namespace uq
    template <typename Derived>
    struct port_base
    {
-      operator bool() const
-      {
-         return derived().state();
-      }
+                        operator bool() const;
+      bool              operator!() const;
 
-      bool operator!() const
-      {
-         return !derived().state();
-      }
+                        template <typename Derived2>
+      Derived&          operator=(port_base<Derived2> const& rhs);
 
-      template <typename Derived2>
-      Derived& operator=(port_base<Derived2> const& rhs)
-      {
-         return derived() = rhs.state();
-      }
-
-      Derived& derived()
-      {
-         return *static_cast<Derived*>(this);
-      }
-
-      Derived const& derived() const
-      {
-         return *static_cast<Derived const*>(this);
-      }
+      Derived&          derived();
+      Derived const&    derived() const;
    };
 
    template <typename T>
    struct inverse_port : port_base<inverse_port<T>>
    {
-	   bool state() const
-      {
-         return port.state();
-      }
-
+	   bool state() const { return port.state(); }
       T port;
    };
 
    struct on_type : port_base<on_type>
    {
-      constexpr bool state() const
-      {
-         return true;
-      }
+      constexpr bool state() const { return true; }
    };
 
    struct off_type : port_base<off_type>
    {
-      constexpr bool state() const
-      {
-         return false;
-      }
+      constexpr bool state() const { return false; }
    };
 
    namespace port
@@ -163,13 +136,13 @@ namespace cycfi { namespace uq
    template <
       port_enum port_
     , std::uint8_t pin_
-    , port_speed_enum speed_ = port::high_speed
-    , port_mode_enum mode_ = port::push_pull
-    , port_pull_enum pull_ = port::no_pull
+    , port_speed_enum speed_  = port::high_speed
+    , port_mode_enum mode_    = port::push_pull
+    , port_pull_enum pull_    = port::no_pull
    >
    struct output_port : port_base<output_port<port_, pin_, speed_, mode_, pull_>>
    {
-      static_assert(pin_ < 16, "Invalid pin number.");
+      static_assert(pin_ < 16, "Invalid pin number");
 
       using self_type = output_port;
       using inverse_type = inverse_port<output_port>;
@@ -182,67 +155,24 @@ namespace cycfi { namespace uq
       constexpr static uint32_t mask = 1 << pin;
       constexpr static auto out = detail::gpio(port);
 
-      output_port()
-      {
-         init();  // Initialize the system
+                        output_port();
+                        ~output_port();
 
-         detail::enable_gpio(port);
-         GPIO_InitTypeDef init =
-         {
-            std::uint32_t(mask)
-          , std::uint32_t(mode)
-          , std::uint32_t(pull)
-          , std::uint32_t(speed)
-         };
-         HAL_GPIO_Init(out, &init);
-      }
+      bool              state() const;
 
-      ~output_port()
-      {
-         HAL_GPIO_DeInit(out, pin);
-      }
-
-      bool state() const
-      {
-         return (out->ODR & mask) != 0;
-      }
-
-      output_port& operator=(bool val)
-      {
-         if (val)
-            out->BSRRL = mask;
-         else
-            out->BSRRH = mask;
-         return *this;
-      }
-
-      output_port& operator=(self_type)
-      {
-         return *this;
-      }
-
-      output_port& operator=(inverse_type)
-      {
-         out->ODR ^= mask;
-         return *this;
-      }
-
-      output_port& operator=(on_type)
-      {
-         out->BSRRL = mask;
-         return *this;
-      }
-
-      output_port& operator=(off_type)
-      {
-         out->BSRRL = mask;
-         return *this;
-      }
+      output_port&      operator=(bool val);
+      output_port&      operator=(self_type);
+      output_port&      operator=(inverse_type);
+      output_port&      operator=(on_type);
+      output_port&      operator=(off_type);
    };
 
    ////////////////////////////////////////////////////////////////////////////
    // Dev boards typically have a main led:
    using main_led = output_port<port::portb, 0>;
+
+   // And optionally one for errors (if not avilable, use the main led instead):
+   using error_led = output_port<port::portb, 14>;
 
    ////////////////////////////////////////////////////////////////////////////
    // input_port
@@ -254,7 +184,7 @@ namespace cycfi { namespace uq
    >
    struct input_port : port_base<input_port<port_, pin_, pull_>>
    {
-      static_assert(pin_ < 16, "Invalid pin number.");
+      static_assert(pin_ < 16, "Invalid pin number");
 
       using self_type = input_port;
 
@@ -264,51 +194,175 @@ namespace cycfi { namespace uq
       constexpr static uint32_t mask = 1 << pin;
       constexpr static auto in = detail::gpio(port);
 
-      input_port()
-      {
-         init();  // Initialize the system
+                        input_port();
+                        input_port(port_edge_enum edge, std::size_t priority = 0);
+                        ~input_port();
 
-         detail::enable_gpio(port);
-         GPIO_InitTypeDef init =
-         {
-            std::uint32_t(mask)
-          , GPIO_MODE_INPUT
-          , std::uint32_t(pull)
-          , GPIO_SPEED_FREQ_VERY_HIGH
-         };
-         HAL_GPIO_Init(in, &init);
-      }
-
-      input_port(port_edge_enum edge, std::size_t priority = 0)
-      {
-         detail::enable_gpio(port);
-         GPIO_InitTypeDef init =
-         {
-            std::uint32_t(mask)
-          , std::uint32_t(edge)
-          , std::uint32_t(pull)
-          , GPIO_SPEED_FREQ_VERY_HIGH
-         };
-         HAL_GPIO_Init(in, &init);
-
-         HAL_NVIC_SetPriority(detail::exti_irq<pin>(), priority, 0);
-         HAL_NVIC_EnableIRQ(detail::exti_irq<pin>());
-      }
-
-      ~input_port()
-      {
-         HAL_GPIO_DeInit(in, pin);
-      }
-
-      bool state() const
-      {
-         return (in->IDR & mask) != 0;
-      }
+      bool              state() const;
    };
 
    ////////////////////////////////////////////////////////////////////////////
    // Dev boards typically have a main button:
    using main_btn = input_port<port::portc, 13, port::pull_down>;
+
+   ////////////////////////////////////////////////////////////////////////////
+   // Implementation
+   ////////////////////////////////////////////////////////////////////////////
+   template <typename Derived>
+   inline port_base<Derived>::operator bool() const
+   {
+      return derived().state();
+   }
+
+   template <typename Derived>
+   inline bool port_base<Derived>::operator!() const
+   {
+      return !derived().state();
+   }
+
+   template <typename Derived>
+   template <typename Derived2>
+   inline Derived& port_base<Derived>::operator=(port_base<Derived2> const& rhs)
+   {
+      return derived() = rhs.state();
+   }
+
+   template <typename Derived>
+   inline Derived& port_base<Derived>::derived()
+   {
+      return *static_cast<Derived*>(this);
+   }
+
+   template <typename Derived>
+   inline Derived const& port_base<Derived>::derived() const
+   {
+      return *static_cast<Derived const*>(this);
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
+   template <port_enum port, std::uint8_t pin, port_speed_enum speed
+    , port_mode_enum mode, port_pull_enum pull>
+   inline output_port<port, pin, speed, mode, pull>::output_port()
+   {
+      init();  // Initialize the system
+
+      detail::enable_gpio(port);
+      GPIO_InitTypeDef init =
+      {
+         std::uint32_t(mask)
+         , std::uint32_t(mode)
+         , std::uint32_t(pull)
+         , std::uint32_t(speed)
+      };
+      HAL_GPIO_Init(out, &init);
+   }
+
+   template <port_enum port, std::uint8_t pin, port_speed_enum speed
+    , port_mode_enum mode, port_pull_enum pull>
+   inline output_port<port, pin, speed, mode, pull>::~output_port()
+   {
+      HAL_GPIO_DeInit(out, pin);
+   }
+
+   template <port_enum port, std::uint8_t pin, port_speed_enum speed
+    , port_mode_enum mode, port_pull_enum pull>
+   inline bool output_port<port, pin, speed, mode, pull>::state() const
+   {
+      return (out->ODR & mask) != 0;
+   }
+
+   template <port_enum port, std::uint8_t pin, port_speed_enum speed
+    , port_mode_enum mode, port_pull_enum pull>
+   inline output_port<port, pin, speed, mode, pull>&
+   output_port<port, pin, speed, mode, pull>::operator=(bool val)
+   {
+      if (val)
+         out->BSRRL = mask;
+      else
+         out->BSRRH = mask;
+      return *this;
+   }
+
+   template <port_enum port, std::uint8_t pin, port_speed_enum speed
+    , port_mode_enum mode, port_pull_enum pull>
+   inline output_port<port, pin, speed, mode, pull>&
+   output_port<port, pin, speed, mode, pull>::operator=(self_type)
+   {
+      return *this;
+   }
+
+   template <port_enum port, std::uint8_t pin, port_speed_enum speed
+    , port_mode_enum mode, port_pull_enum pull>
+   inline output_port<port, pin, speed, mode, pull>&
+   output_port<port, pin, speed, mode, pull>::operator=(inverse_type)
+   {
+      out->ODR ^= mask;
+      return *this;
+   }
+
+   template <port_enum port, std::uint8_t pin, port_speed_enum speed
+    , port_mode_enum mode, port_pull_enum pull>
+   inline output_port<port, pin, speed, mode, pull>&
+   output_port<port, pin, speed, mode, pull>::operator=(on_type)
+   {
+      out->BSRRL = mask;
+      return *this;
+   }
+
+   template <port_enum port, std::uint8_t pin, port_speed_enum speed
+    , port_mode_enum mode, port_pull_enum pull>
+   inline output_port<port, pin, speed, mode, pull>&
+   output_port<port, pin, speed, mode, pull>::operator=(off_type)
+   {
+      out->BSRRL = mask;
+      return *this;
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
+   template <port_enum port, std::uint8_t pin, port_pull_enum pull>
+   inline input_port<port, pin, pull>::input_port()
+   {
+      init();  // Initialize the system
+
+      detail::enable_gpio(port);
+      GPIO_InitTypeDef init =
+      {
+         std::uint32_t(mask)
+         , GPIO_MODE_INPUT
+         , std::uint32_t(pull)
+         , GPIO_SPEED_FREQ_VERY_HIGH
+      };
+      HAL_GPIO_Init(in, &init);
+   }
+
+   template <port_enum port, std::uint8_t pin, port_pull_enum pull>
+   inline input_port<port, pin, pull>::input_port(port_edge_enum edge, std::size_t priority)
+   {
+      detail::enable_gpio(port);
+      GPIO_InitTypeDef init =
+      {
+         std::uint32_t(mask)
+         , std::uint32_t(edge)
+         , std::uint32_t(pull)
+         , GPIO_SPEED_FREQ_VERY_HIGH
+      };
+      HAL_GPIO_Init(in, &init);
+
+      HAL_NVIC_SetPriority(detail::exti_irq<pin>(), priority, 0);
+      HAL_NVIC_EnableIRQ(detail::exti_irq<pin>());
+   }
+
+   template <port_enum port, std::uint8_t pin, port_pull_enum pull>
+   inline input_port<port, pin, pull>::~input_port()
+   {
+      HAL_GPIO_DeInit(in, pin);
+   }
+
+   template <port_enum port, std::uint8_t pin, port_pull_enum pull>
+   inline bool input_port<port, pin, pull>::state() const
+   {
+      return (in->IDR & mask) != 0;
+   }
 }}
 
 #endif

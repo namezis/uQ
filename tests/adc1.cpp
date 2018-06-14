@@ -9,12 +9,13 @@
 namespace uq = cycfi::uq;
 
 ///////////////////////////////////////////////////////////////////////////////
-// Acquire analog inputs using the adc set to sample at a rate of 100 times
-// per second. Run the program. Set a breakpoint in either irq functions and
-// inspect the adc._data. The timer used has a clock frequency of 10kHz and a
+// Acquire analog inputs using the ADC set to get data at a rate of 100
+// samples per second. The timer used has a clock frequency of 10kHz and a
 // cycle period of 100 ticks. Hence, 10kHz/100 == 100Hz.
 //
 // Setup: Connect a 3.3v voltage divider using a potentiometer to pin PA6.
+// Run the program. Set a breakpoint in either irq functions and inspect the
+// adc._data.
 ///////////////////////////////////////////////////////////////////////////////
 uq::timer<3>      timer(10000, 100);
 uq::adc<1, 1, 32> adc(timer);

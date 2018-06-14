@@ -32,7 +32,7 @@ namespace cycfi { namespace uq
    struct adc : detail::adc_base
    {
       static constexpr std::size_t id = id_;
-      static_assert(id >=1 && id <= 3, "Invalid ADC id");
+      static_assert(id >=1 && id <= 3, "Invalid ADC ID");
 
       static constexpr std::size_t channels = channels_;
       static constexpr std::size_t buffer_size = buffer_size_;
@@ -41,41 +41,15 @@ namespace cycfi { namespace uq
       using base_type = detail::adc_base;
       using adc_type = adc;
 
-      template <std::size_t tid>
-      adc(timer<tid>& tmr)
-       : adc_base(id, _data, capacity)
-      {
-         static_assert(detail::is_valid_adc_timer(tid), "Invalid Timer for ADC");
-         base_type::setup<id>(tmr);
-      }
+                        template <std::size_t tid>
+                        adc(timer<tid>& tmr);
 
-      template <std::size_t... channels>
-      void enable_channels()
-      {
-         static_assert(sizeof...(channels) == channels_,
-            "Invalid number of channnels");
+                        template <std::size_t... channels>
+      void              enable_channels();
 
-         using iseq = std::index_sequence<channels...>;
-         detail::enable_all_adc_channels<id>(iseq{}, *this, 1);
-      }
-
-      void start()
-      {
-         auto data = reinterpret_cast<uint32_t*>(_data);
-         if (HAL_ADC_Start_DMA(this, data, capacity) != HAL_OK)
-            error_handler();
-      }
-
-      void stop()
-      {
-         if (HAL_ADC_Stop_DMA(this))
-            error_handler();
-      }
-
-      void clear()
-      {
-         std::fill(_data, _data + capacity, 0);
-      }
+      void              start();
+      void              stop();
+      void              clear();
 
       uint16_t const*   begin() const     { return _data; }
       uint16_t const*   middle() const    { return _data + (capacity / 2); }
@@ -83,6 +57,49 @@ namespace cycfi { namespace uq
 
       uint16_t          _data[capacity] __attribute__((aligned(32)));
    };
+   ////////////////////////////////////////////////////////////////////////////
+   // Implementation
+   ////////////////////////////////////////////////////////////////////////////
+   template <std::size_t id, std::size_t channels, std::size_t buffer_size>
+   template <std::size_t tid>
+   inline adc<id, channels, buffer_size>::adc(timer<tid>& tmr)
+    : adc_base(id, _data, capacity)
+   {
+      static_assert(detail::is_valid_adc_timer(tid), "Invalid Timer for ADC");
+      base_type::setup<id>(tmr);
+   }
+
+   template <std::size_t id, std::size_t channels_, std::size_t buffer_size>
+   template <std::size_t... channels>
+   inline void adc<id, channels_, buffer_size>::enable_channels()
+   {
+      static_assert(sizeof...(channels) == channels_,
+         "Invalid number of channnels");
+
+      using iseq = std::index_sequence<channels...>;
+      detail::enable_all_adc_channels<id>(iseq{}, *this, 1);
+   }
+
+   template <std::size_t id, std::size_t channels, std::size_t buffer_size>
+   inline void adc<id, channels, buffer_size>::start()
+   {
+      auto data = reinterpret_cast<uint32_t*>(_data);
+      if (HAL_ADC_Start_DMA(this, data, capacity) != HAL_OK)
+         error_handler();
+   }
+
+   template <std::size_t id, std::size_t channels, std::size_t buffer_size>
+   inline void adc<id, channels, buffer_size>::stop()
+   {
+      if (HAL_ADC_Stop_DMA(this))
+         error_handler();
+   }
+
+   template <std::size_t id, std::size_t channels, std::size_t buffer_size>
+   inline void adc<id, channels, buffer_size>::clear()
+   {
+      std::fill(_data, _data + capacity, 0);
+   }
 }}
 
 #endif

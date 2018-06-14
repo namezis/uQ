@@ -30,48 +30,63 @@ namespace cycfi { namespace uq
       constexpr static auto timer_base = detail::get_timer(N);
       static_assert(timer_base, "Invalid Timer N");
 
-      timer(uint32_t clock_frequency, uint32_t period)
-      {
-         uq::init(); // Initialize the system
-         detail::enable_peripheral_clock<N>();
+               timer(uint32_t clock_frequency, uint32_t period);
+               ~timer();
 
-         auto const periph_clock = detail::timer_clock_div(N) * clock_frequency;
-         auto const prescaler    = (clock_speed() / periph_clock) - 1;
-
-         Init.Period             = period - 1;
-         Init.Prescaler          = prescaler;
-         Init.ClockDivision      = 0;
-         Init.CounterMode        = TIM_COUNTERMODE_UP;
-         Init.RepetitionCounter  = 0;
-
-         Instance = timer_base;
-         if (HAL_TIM_Base_Init(this) != HAL_OK)
-            error_handler();
-      }
-
-      ~timer()
-      {
-         HAL_TIM_Base_MspDeInit(this);
-      }
-
-      void enable_interrupt(std::size_t priority = 0)
-      {
-         HAL_NVIC_SetPriority(detail::get_timer_irq_id<N>(), priority, 0);
-         HAL_NVIC_EnableIRQ(detail::get_timer_irq_id<N>());
-      }
-
-      void start()
-      {
-         if (HAL_TIM_Base_Start_IT(this) != HAL_OK)
-            error_handler();
-      }
-
-      void stop()
-      {
-         if (HAL_TIM_Base_Stop_IT(this) != HAL_OK)
-            error_handler();
-      }
+      void     enable_interrupt(std::size_t priority = 0);
+      void     start();
+      void     stop();
    };
+
+   ////////////////////////////////////////////////////////////////////////////
+   // Implementation
+   ////////////////////////////////////////////////////////////////////////////
+   template <std::size_t N>
+   inline timer<N>::timer(uint32_t clock_frequency, uint32_t period)
+   {
+      uq::init(); // Initialize the system
+      detail::enable_peripheral_clock<N>();
+
+      auto const periph_clock = detail::timer_clock_div(N) * clock_frequency;
+      auto const prescaler    = (clock_speed() / periph_clock) - 1;
+
+      Init.Period             = period - 1;
+      Init.Prescaler          = prescaler;
+      Init.ClockDivision      = 0;
+      Init.CounterMode        = TIM_COUNTERMODE_UP;
+      Init.RepetitionCounter  = 0;
+
+      Instance = timer_base;
+      if (HAL_TIM_Base_Init(this) != HAL_OK)
+         error_handler();
+   }
+
+   template <std::size_t N>
+   inline timer<N>::~timer()
+   {
+      HAL_TIM_Base_MspDeInit(this);
+   }
+
+   template <std::size_t N>
+   inline void timer<N>::enable_interrupt(std::size_t priority)
+   {
+      HAL_NVIC_SetPriority(detail::get_timer_irq_id<N>(), priority, 0);
+      HAL_NVIC_EnableIRQ(detail::get_timer_irq_id<N>());
+   }
+
+   template <std::size_t N>
+   inline void timer<N>::start()
+   {
+      if (HAL_TIM_Base_Start_IT(this) != HAL_OK)
+         error_handler();
+   }
+
+   template <std::size_t N>
+   inline void timer<N>::stop()
+   {
+      if (HAL_TIM_Base_Stop_IT(this) != HAL_OK)
+         error_handler();
+   }
 }}
 
 #endif
