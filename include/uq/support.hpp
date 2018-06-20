@@ -10,6 +10,9 @@
 #include <type_traits>
 #include <cstdint>
 #include <cstring>
+#include <limits>
+#include <algorithm>
+#include <cassert>
 #include <stm32h7xx_hal.h>
 
 namespace cycfi { namespace uq
@@ -137,57 +140,60 @@ namespace cycfi { namespace uq
    };
 
    ////////////////////////////////////////////////////////////////////////////
-   // Quick to_string implementation.
+   // Practical and efficient to_string implementation.
    //
-   //    n: integer to convert, scaled it by frac if you need
-   //       fractional digits.
-   //    s: the output string. should hold enough chars to represent
-   //       the digits.
-   //    frac: number of decimal places.
+   //    n:    Integer to convert. frac: Number of decimal places.
    //
-   //    For example, if n: 1234 and frac: 2, the result is 12.34
+   //    Scale it by frac if you need fractional digits. For example, given
+   //    n: 1234 and frac: 2, the result is "12.34"
    ////////////////////////////////////////////////////////////////////////////
-   inline void reverse(char s[])
+   template <typename T, std::size_t frac_>
+   struct to_string_impl
    {
-      int i, j;
-      for (i = 0, j = std::strlen(s)-1; i<j; i++, j--)
+      to_string_impl(T n)
       {
-         char c = s[i];
-         s[i] = s[j];
-         s[j] = c;
-      }
-   }
+         auto frac = size-frac_-1;
+         auto i = size-1;
+         auto sign = n;
+         n = std::abs(n);
 
-   inline void to_string(int n, char s[], int frac = 0)
-   {
-      int i, sign;
-
-      if ((sign = n) < 0)                 // record sign
-         n = -n;                          // make n positive
-      i = 0;
-      while (true)                        // generate digits in reverse order
-      {
-         if (frac && i == frac)
-            s[i++] = '.';
-         s[i++] = n % 10 + '0';           // get next digit
-
-         if ((n /= 10) == 0)
+         while (true)
          {
-            if (i <= frac)
+            if (frac && i == frac)
+               s[i--] = '.';
+
+            s[i--] = n % 10 + '0';
+
+            if ((n /= 10) == 0)
             {
-               while (i != frac)
-                  s[i++] = '0';
-               s[i++] = '.';
-               s[i++] = '0';
+               if (i >= frac)
+               {
+                  while (i != frac)
+                     s[i--] = '0';
+                  s[i--] = '.';
+                  s[i--] = '0';
+               }
+               break;
             }
-            break;
          }
+
+         if (sign < 0)
+            s[i--] = '-';
+         auto len = size-i-1;
+         std::memmove(s, s+i+1, len);
+         s[len] = '\0';
       }
 
-      if (sign < 0)
-         s[i++] = '-';
-      s[i] = '\0';
-      reverse(s);
+      static constexpr std::size_t size = std::numeric_limits<T>::digits10 + 2;
+      static_assert(frac_+2 < size, "frac is too big");
+
+      char s[size];
+   };
+
+   template <std::size_t frac = 0, typename T>
+   auto to_string(T n)
+   {
+      return to_string_impl<T, frac>{n}.s;
    }
 }}
 
